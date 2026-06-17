@@ -55,6 +55,16 @@ python -m pip install -e ".[dev]"
 
 ## Quick Start Without IBM Quantum
 
+Recommended workflow: audit first, generate second.
+
+```bash
+quantum-lotto-lab audit \
+  --lottery powerball \
+  --date 2026-06-23 \
+  --columns 30 \
+  --output outputs/powerball_audit.json
+```
+
 ```bash
 quantum-lotto-lab predict \
   --lottery powerball \
@@ -86,7 +96,7 @@ quantum-lotto-lab ibm-login
 Then run:
 
 ```bash
-quantum-lotto-lab predict \
+quantum-lotto-lab audit \
   --lottery powerball \
   --date 2026-06-23 \
   --columns 30 \
@@ -145,6 +155,15 @@ quantum-lotto-lab predict \
 The IBM mode submits a real high-qubit circuit to IBM Quantum hardware. Exact classical statevector simulation scales as `O(2^qubits)`, so a 100-200 qubit circuit is not something a normal computer can exactly simulate.
 
 That does **not** mean it predicts lottery outcomes. It means the ticket-generation system can use a real quantum measurement distribution as part of the research workflow.
+
+The locked workflow is:
+
+1. Test whether historical draws deviate from a simple random baseline.
+2. Measure candidate signals: frequency, recency, gap/overdue, pair centrality, seasonality.
+3. Run walk-forward out-of-sample validation.
+4. Select the model only if it beats the uniform baseline.
+5. Generate ticket sets.
+6. Optionally add IBM Quantum sampling as the final sampling layer.
 
 See [docs/methodology.md](docs/methodology.md) for the plain-language math notes.
 

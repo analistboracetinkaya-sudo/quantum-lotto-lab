@@ -60,3 +60,35 @@ Bad phrasing:
 
 The second sentence is not supported by the math.
 
+## Locked Workflow
+
+Do not start from "make IBM choose numbers." The correct order is:
+
+1. **Randomness audit**
+   - Ask: does the history deviate from a simple random baseline?
+   - Measure frequency z-scores, pair lift, gap/overdue behavior, and date effects.
+
+2. **Signal discovery**
+   - Candidate signals are only hypotheses.
+   - A hot number, overdue number, or strong pair is not useful unless it predicts outside the training window.
+
+3. **Walk-forward validation**
+   - Train on earlier draws.
+   - Predict the next draw.
+   - Move forward one draw and repeat.
+   - Compare against a uniform baseline.
+
+4. **Model selection**
+   - Use the model only if it beats uniform out-of-sample.
+   - If no model wins, say so plainly.
+
+5. **Ticket generation**
+   - Generate columns from the validated weighting model.
+   - Report jackpot probability, 2+/3+ rates, and backtest uncertainty.
+
+6. **Optional IBM Quantum layer**
+   - IBM QPU sampling can be used after the model has been built.
+   - IBM does not understand the lottery by itself.
+   - The reasoning layer is the statistical audit and walk-forward validation.
+
+This order is intentional. Skipping directly to quantum sampling creates impressive-looking output without answering whether the historical data contains a reusable signal.
