@@ -1,0 +1,9 @@
+{
+  "slug": "my-lottery",
+  "name": "My Custom Lottery",
+  "region": "Custom",
+  "main": { "name": "numbers", "min": 1, "max": 60, "pick": 6 },
+  "bonus": null,
+  "source_note": "Use --csv with columns date,numbers or date,1,2,3,4,5,6."
+}
+

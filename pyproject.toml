@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "quantum-lotto-lab"
+version = "0.1.0"
+description = "High-qubit IBM Quantum lottery research toolkit for configurable lotteries."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Quantum Lotto Lab contributors" }]
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "requests>=2.31",
+  "qiskit>=1.0",
+  "qiskit-ibm-runtime>=0.30",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[project.scripts]
+quantum-lotto-lab = "quantum_lotto_lab.cli:main"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
