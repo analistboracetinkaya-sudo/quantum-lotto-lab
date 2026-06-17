@@ -64,3 +64,11 @@ def test_optimizer_covers_full_pool_when_capacity_allows():
     union = set(num for ticket in tickets for num in ticket.main)
     assert len(tickets) == 30
     assert union == set(range(1, 61))
+
+
+def test_optimizer_single_target_returns_one_ticket():
+    spec = get_lottery("super-loto-tr")
+    draws = biased_draws()
+    tickets = optimize_tickets(spec, draws, columns=1, seed=14, candidate_pool=500)
+    assert len(tickets) == 1
+    assert len(tickets[0].main) == 6

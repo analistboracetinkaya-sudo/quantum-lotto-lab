@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import json
 import re
 from datetime import date
@@ -193,4 +192,3 @@ def load_custom_spec(path: str | Path) -> LotterySpec:
         parser=payload.get("parser"),
         source_note=payload.get("source_note", "custom user spec"),
     )
-

@@ -82,3 +82,44 @@ def run_heavy_sampling(
         output_counts.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return bits, payload
 
+
+def run_profiled_sampling(
+    backend_name: str,
+    qubits: int,
+    layers: int,
+    batch_circuits: int,
+    shots: int,
+    seed_weights: list[float],
+    output_counts: Path | None = None,
+    repeat_jobs: int = 1,
+    profile: str = "custom",
+) -> tuple[list[int], dict]:
+    all_bits: list[int] = []
+    jobs = []
+    for repeat in range(max(1, int(repeat_jobs))):
+        repeat_output = output_counts.with_suffix(f".counts.{repeat + 1:02d}.json") if output_counts else None
+        bits, payload = run_heavy_sampling(
+            backend_name=backend_name,
+            qubits=qubits,
+            layers=layers,
+            batch_circuits=batch_circuits,
+            shots=shots,
+            seed_weights=seed_weights,
+            output_counts=repeat_output,
+        )
+        all_bits.extend(bits)
+        jobs.append(payload)
+    first = jobs[0] if jobs else {}
+    return all_bits, {
+        "profile": profile,
+        "backend": first.get("backend", backend_name),
+        "job_id": ",".join(job["job_id"] for job in jobs),
+        "job_ids": [job["job_id"] for job in jobs],
+        "qubits": first.get("qubits", qubits),
+        "layers": layers,
+        "batch_circuits": batch_circuits,
+        "shots_per_circuit": shots,
+        "repeat_jobs": repeat_jobs,
+        "total_requested_shots": sum(job["total_requested_shots"] for job in jobs),
+        "jobs": jobs,
+    }

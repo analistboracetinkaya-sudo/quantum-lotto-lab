@@ -6,10 +6,15 @@ This project builds lottery ticket sets from historical draw data, classical sta
 
 **It does not guarantee winnings. Lottery outcomes are random.**
 
+## Motto
+
+Every random process has mathematics. This tool does not assume that the math is exploitable; it tests whether measured structure survives calibrated null tests and out-of-sample validation.
+
 ## What It Does
 
 - Asks which lottery and which draw date you want.
 - Loads historical draws from a built-in source or your own CSV.
+- Checks data quality before modeling: duplicate dates, range errors, repeated numbers, and draw sizes.
 - Supports lotteries with different formats, not only 6-number games.
 - Builds mathematical features:
   - frequency, recency, exponential recency, and Bayesian-smoothed frequency
@@ -20,10 +25,13 @@ This project builds lottery ticket sets from historical draw data, classical sta
   - historical backtest summary
   - theoretical jackpot and 2+/3+ baselines
 - Runs a 15-model walk-forward validation suite before selecting the ticket weighting model.
+- Calibrates randomness fingerprints against synthetic uniform draw histories, so raw pair/triple lift does not become a fake signal.
+- Separates historical fit from nested predictive validation, where every tested draw is unseen during ticket generation.
+- Can run exact top-K candidate search when the combination space is feasible, including `C(60, 6) = 50,063,860`.
 - Optimizes multi-column ticket sets for coverage, overlap control, pair/triple diversity, and historical 2+/3+ backtest behavior.
 - Forces full union coverage when the column capacity can cover the full pool, such as `30 x 6 >= 60` for `6/60`.
 - Optionally runs a real IBM Quantum job using 100-200 qubits when the selected backend supports it.
-- Uses IBM QPU bitstrings as a high-qubit sampling signal for ticket generation.
+- Uses IBM QPU bitstrings as a high-qubit sampling signal for ticket generation, with `standard`, `long`, `deep`, and `extreme` profiles.
 
 ## Built-In Lottery Specs
 
@@ -66,6 +74,7 @@ quantum-lotto-lab audit \
   --lottery powerball \
   --date 2026-06-23 \
   --columns 30 \
+  --target portfolio30 \
   --output outputs/powerball_audit.json
 ```
 
@@ -105,15 +114,12 @@ quantum-lotto-lab audit \
   --date 2026-06-23 \
   --columns 30 \
   --ibm \
+  --quantum-profile long \
   --backend ibm_kingston \
-  --qubits 120 \
-  --layers 40 \
-  --batch-circuits 4 \
-  --shots 4096 \
   --output outputs/powerball_ibm.json
 ```
 
-If the backend has fewer available qubits than requested, Qiskit/IBM constraints apply. Use `ibm_kingston`, `ibm_marrakesh`, or another backend available to your IBM account.
+If the backend has fewer available qubits than requested, Qiskit/IBM constraints apply. Use `ibm_kingston`, `ibm_marrakesh`, or another backend available to your IBM account. The `long` profile requests a substantially heavier run than the old short defaults: 127 requested qubits, 64 layers, 12 batch circuits, 8192 shots per circuit, and 2 repeat jobs before backend limits.
 
 ## CSV Format
 
@@ -162,12 +168,15 @@ That does **not** mean it predicts lottery outcomes. It means the ticket-generat
 
 The locked workflow is:
 
-1. Test whether historical draws deviate from a simple random baseline.
-2. Fingerprint the **kind** of randomness: frequency bias, entropy compression, pair/triple clustering, temporal memory, runs irregularity, distribution drift, calendar effects, gap anomaly, and graph concentration.
-3. Run 15 walk-forward candidate models against the uniform baseline.
-4. Select the generation model from the out-of-sample results.
-5. Generate ticket sets with coverage, overlap, pair/triple diversity, and historical hit-rate objectives.
-6. Optionally add IBM Quantum sampling as the final entropy/sampling layer.
+1. Validate the draw history.
+2. Test whether historical draws deviate from a simple random baseline.
+3. Fingerprint the **kind** of randomness: frequency bias, entropy compression, pair/triple clustering, temporal memory, runs irregularity, distribution drift, calendar effects, gap anomaly, and graph concentration.
+4. Calibrate those fingerprints against synthetic uniform histories.
+5. Run 15 walk-forward candidate models against the uniform baseline.
+6. Run nested predictive validation so tested draws are unseen during ticket generation.
+7. Generate candidate variations using sampled search or exact top-K search when feasible.
+8. Select either the best single 6-number column or a diversified 30-column 6/6 portfolio.
+9. Optionally add IBM Quantum sampling as the final entropy/sampling layer using a long/deep/extreme profile.
 
 The walk-forward model suite currently includes:
 

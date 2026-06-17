@@ -68,7 +68,30 @@ Current fingerprint families:
 - `graph_concentration`: top pair relationships are concentrated around a small group of numbers.
 - `near_uniform`: no tested fingerprint is strong enough to highlight.
 
-These are hypotheses. A fingerprint is only useful if it survives walk-forward testing.
+These are hypotheses. A fingerprint is only useful if it survives calibrated null testing and walk-forward testing.
+
+## Calibration
+
+Raw maximum pair/triple lift is not enough. In a lottery-sized sample, a maximum pair or triple can look impressive even when the data is truly uniform random.
+
+The calibrated audit creates synthetic draw histories with the same size and lottery rules, then asks:
+
+```text
+How often would a uniform random history produce a signal at least this strong?
+```
+
+The report shows empirical p-values for:
+
+- frequency chi-square
+- pair max-lift
+- triple max-lift
+- serial lag overlap
+- distribution drift
+- runs-test irregularity
+- gap anomaly
+- calendar effect
+
+A randomness family is treated as dominant only when the calibrated empirical p-value is `<= 0.01`.
 
 ## Walk-Forward Model Suite
 
@@ -108,6 +131,24 @@ For multi-column runs, the optimizer balances several goals:
 
 For a `6/60` lottery, 30 columns are still a tiny subset of the full `C(60, 6) = 50,063,860` jackpot space. Optimization can improve coverage and historical fit; it cannot remove the jackpot risk.
 
+## Historical Fit vs Predictive Validation
+
+The report separates two ideas:
+
+- **Historical fit:** how the final ticket set overlaps with past draws.
+- **Nested predictive validation:** for each tested draw, the system trains only on earlier draws, generates tickets, and then compares against the unseen draw.
+
+The second metric is more important. It is slower, but it avoids using future information accidentally.
+
+## Candidate Search
+
+Candidate generation has two modes:
+
+- `sampled`: generates a large stochastic candidate pool and optimizes from it.
+- `exact`: streams the full combination space when feasible, keeps a top-K heap, and then optimizes from those candidates.
+
+For `6/60`, exact mode can evaluate `50,063,860` combinations. For much larger games, sampled mode is the practical fallback.
+
 ## Honest Interpretation
 
 Good phrasing:
@@ -124,31 +165,42 @@ The second sentence is not supported by the math.
 
 Do not start from "make IBM choose numbers." The correct order is:
 
-1. **Randomness audit**
+1. **Data quality**
+   - Check duplicate draw dates, range errors, wrong draw sizes, and repeated numbers inside a draw.
+
+2. **Randomness audit**
    - Ask: does the history deviate from a simple random baseline?
    - Measure frequency z-scores, entropy, runs, pair/triple lift, gap behavior, serial lag, distribution drift, and date effects.
 
-2. **Signal discovery**
+3. **Calibration**
+   - Compare observed signals against synthetic uniform histories.
+   - Treat raw structure as noise unless calibrated p-values are strong.
+
+4. **Signal discovery**
    - Candidate signals are only hypotheses.
    - A hot number, overdue number, or strong pair is not useful unless it predicts outside the training window.
 
-3. **Walk-forward validation**
+5. **Walk-forward validation**
    - Train on earlier draws.
    - Predict the next draw.
    - Move forward one draw and repeat.
    - Compare against a uniform baseline.
 
-4. **Model selection**
+6. **Model selection**
    - Use the model only if it beats uniform out-of-sample.
    - If no model wins, say so plainly.
 
-5. **Ticket generation**
+7. **Ticket generation**
    - Generate columns from the validated weighting model.
    - Optimize coverage, overlap, pair/triple diversity, 2+/3+ backtest behavior, and number reuse.
    - Report jackpot probability, 2+/3+ rates, and backtest uncertainty.
 
-6. **Optional IBM Quantum layer**
+8. **Nested predictive validation**
+   - Rebuild tickets using only past data and compare with the next unseen draw.
+
+9. **Optional IBM Quantum layer**
    - IBM QPU sampling can be used after the model has been built.
+   - Use `long`, `deep`, or `extreme` profiles when the goal is to push IBM harder.
    - IBM does not understand the lottery by itself.
    - The reasoning layer is the statistical audit and walk-forward validation.
 

@@ -243,7 +243,37 @@ def optimize_tickets(
     seed: int = 0,
     candidate_pool: int = 6000,
     score_override: np.ndarray | None = None,
+    candidate_mode: str = "sampled",
+    exact_top_k: int = 10000,
+    max_exact_combinations: int = 60_000_000,
 ) -> list[Ticket]:
+    tickets, _ = optimize_tickets_with_metadata(
+        spec,
+        draws,
+        columns,
+        seed_bits=seed_bits,
+        seed=seed,
+        candidate_pool=candidate_pool,
+        score_override=score_override,
+        candidate_mode=candidate_mode,
+        exact_top_k=exact_top_k,
+        max_exact_combinations=max_exact_combinations,
+    )
+    return tickets
+
+
+def optimize_tickets_with_metadata(
+    spec: LotterySpec,
+    draws: list[Draw],
+    columns: int,
+    seed_bits: list[int] | None = None,
+    seed: int = 0,
+    candidate_pool: int = 6000,
+    score_override: np.ndarray | None = None,
+    candidate_mode: str = "sampled",
+    exact_top_k: int = 10000,
+    max_exact_combinations: int = 60_000_000,
+) -> tuple[list[Ticket], dict]:
     scores = score_override if score_override is not None else number_scores(draws, spec.main, "main")
     scores = np.asarray(scores, dtype=float)
     rng_seed = int(seed)
@@ -253,8 +283,29 @@ def optimize_tickets(
             digest = ((digest << 1) ^ int(bit)) & ((1 << 63) - 1)
         rng_seed ^= digest
     rng = np.random.default_rng(rng_seed)
-    candidates = generate_candidate_combos(spec, draws, scores, rng, candidate_pool)
     values = spec.main.values
+    search_report = {
+        "candidate_mode": candidate_mode,
+        "total_combinations": math.comb(len(values), spec.main.pick),
+        "evaluated_combinations": None,
+        "candidate_count": 0,
+        "exact_used": False,
+    }
+    if candidate_mode == "exact" and search_report["total_combinations"] <= max_exact_combinations:
+        from .search import stream_top_combinations
+
+        exact = stream_top_combinations(values, spec.main.pick, scores, top_k=exact_top_k)
+        candidates = [tuple(row["combo"]) for row in exact["top"]]
+        search_report.update(
+            {
+                "evaluated_combinations": exact["evaluated_combinations"],
+                "candidate_count": len(candidates),
+                "exact_used": True,
+            }
+        )
+    else:
+        candidates = generate_candidate_combos(spec, draws, scores, rng, candidate_pool)
+        search_report.update({"evaluated_combinations": len(candidates), "candidate_count": len(candidates)})
     ranked = sorted(candidates, key=lambda combo: candidate_objective(combo, scores, values, draws), reverse=True)
 
     selected: list[tuple[int, ...]] = []
@@ -320,7 +371,7 @@ def optimize_tickets(
         if spec.bonus and bonus_probs is not None:
             bonus = sample_unique(rng, spec.bonus.values, bonus_probs, spec.bonus.pick)
         tickets.append(Ticket(combo, bonus, "optimized_quantum_weighted" if seed_bits else "optimized_classical"))
-    return tickets
+    return tickets, search_report
 
 
 def ticket_set_metrics(tickets: list[Ticket], pool: PoolSpec) -> dict:
