@@ -7,11 +7,13 @@ Quantum Lotto Lab is a research tool. It separates three things that are often m
    - The theoretical jackpot probability comes from combinations, not from AI.
 
 2. **Historical risk modeling**
-   - The tool reads previous draws and scores each number with several simple signals:
+   - The tool reads previous draws and scores each number with several statistical signals:
      - long-term frequency
      - recent frequency
      - exponential recency
+     - Bayesian-smoothed frequency
      - overdue/gap signal
+     - anti-frequency and anti-recent controls
      - pair co-occurrence centrality
    - These signals can shape tickets, but they do not prove that future draws are predictable.
 
@@ -48,6 +50,64 @@ Backtest percentages are estimates from historical data. If the backtest window 
 
 This is not a guarantee. It is just a way to avoid over-reading small backtest samples.
 
+## Randomness Fingerprint
+
+The audit does not only ask "is this random?" It tries to identify the **shape** of any deviation from a simple uniform baseline.
+
+Current fingerprint families:
+
+- `frequency_bias`: some numbers appear unusually often or rarely.
+- `entropy_compression`: the observed distribution is more concentrated than a flat distribution.
+- `pair_clustering`: pairs appear together more often than a simple random model expects.
+- `triple_clustering`: triples appear together more often than expected.
+- `temporal_memory`: nearby draws overlap more or less than expected.
+- `runs_irregularity`: hit/miss sequences for numbers have unusual run patterns.
+- `distribution_drift`: early-history and late-history number distributions differ.
+- `calendar_effect`: month or weekday buckets differ from the global distribution.
+- `gap_anomaly`: waiting times between appearances differ from the geometric baseline.
+- `graph_concentration`: top pair relationships are concentrated around a small group of numbers.
+- `near_uniform`: no tested fingerprint is strong enough to highlight.
+
+These are hypotheses. A fingerprint is only useful if it survives walk-forward testing.
+
+## Walk-Forward Model Suite
+
+The tool evaluates 15 candidate models by repeatedly training on earlier draws, predicting the next draw, and moving forward one step.
+
+```text
+uniform
+frequency_all
+recent_frequency
+ewma_recency
+bayesian_dirichlet
+gap_overdue
+pair_centrality
+anti_frequency
+anti_recent
+drift_recent_vs_old
+stability
+hybrid_gap_pair
+hybrid_recency_pair
+ensemble
+legacy_weighted
+```
+
+The selected generation model is the best out-of-sample model, not simply the model that looks best on the full history.
+
+## Ticket Optimizer
+
+For multi-column runs, the optimizer balances several goals:
+
+- higher score under the selected walk-forward model
+- broad union coverage across the available number pool
+- full union coverage when the ticket capacity can cover the full pool
+- controlled overlap between columns
+- pair and triple diversity
+- historical 2+ and 3+ backtest behavior over the recent window
+- penalties for extreme number reuse or unnatural structure
+
+For a `6/60` lottery, 30 columns are still a tiny subset of the full `C(60, 6) = 50,063,860` jackpot space. Optimization can improve coverage and historical fit; it cannot remove the jackpot risk.
+
 ## Honest Interpretation
 
 Good phrasing:
@@ -66,7 +126,7 @@ Do not start from "make IBM choose numbers." The correct order is:
 
 1. **Randomness audit**
    - Ask: does the history deviate from a simple random baseline?
-   - Measure frequency z-scores, pair lift, gap/overdue behavior, and date effects.
+   - Measure frequency z-scores, entropy, runs, pair/triple lift, gap behavior, serial lag, distribution drift, and date effects.
 
 2. **Signal discovery**
    - Candidate signals are only hypotheses.
@@ -84,6 +144,7 @@ Do not start from "make IBM choose numbers." The correct order is:
 
 5. **Ticket generation**
    - Generate columns from the validated weighting model.
+   - Optimize coverage, overlap, pair/triple diversity, 2+/3+ backtest behavior, and number reuse.
    - Report jackpot probability, 2+/3+ rates, and backtest uncertainty.
 
 6. **Optional IBM Quantum layer**

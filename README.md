@@ -12,12 +12,16 @@ This project builds lottery ticket sets from historical draw data, classical sta
 - Loads historical draws from a built-in source or your own CSV.
 - Supports lotteries with different formats, not only 6-number games.
 - Builds mathematical features:
-  - frequency and recent frequency
-  - exponential recency
-  - overdue/gap signal
-  - pair co-occurrence centrality
+  - frequency, recency, exponential recency, and Bayesian-smoothed frequency
+  - overdue/gap behavior and anti-frequency controls
+  - pair and triple co-occurrence lift
+  - serial lag overlap, runs-test anomalies, entropy deficit, and distribution drift
+  - month/weekday seasonality checks
   - historical backtest summary
   - theoretical jackpot and 2+/3+ baselines
+- Runs a 15-model walk-forward validation suite before selecting the ticket weighting model.
+- Optimizes multi-column ticket sets for coverage, overlap control, pair/triple diversity, and historical 2+/3+ backtest behavior.
+- Forces full union coverage when the column capacity can cover the full pool, such as `30 x 6 >= 60` for `6/60`.
 - Optionally runs a real IBM Quantum job using 100-200 qubits when the selected backend supports it.
 - Uses IBM QPU bitstrings as a high-qubit sampling signal for ticket generation.
 
@@ -159,11 +163,20 @@ That does **not** mean it predicts lottery outcomes. It means the ticket-generat
 The locked workflow is:
 
 1. Test whether historical draws deviate from a simple random baseline.
-2. Measure candidate signals: frequency, recency, gap/overdue, pair centrality, seasonality.
-3. Run walk-forward out-of-sample validation.
-4. Select the model only if it beats the uniform baseline.
-5. Generate ticket sets.
-6. Optionally add IBM Quantum sampling as the final sampling layer.
+2. Fingerprint the **kind** of randomness: frequency bias, entropy compression, pair/triple clustering, temporal memory, runs irregularity, distribution drift, calendar effects, gap anomaly, and graph concentration.
+3. Run 15 walk-forward candidate models against the uniform baseline.
+4. Select the generation model from the out-of-sample results.
+5. Generate ticket sets with coverage, overlap, pair/triple diversity, and historical hit-rate objectives.
+6. Optionally add IBM Quantum sampling as the final entropy/sampling layer.
+
+The walk-forward model suite currently includes:
+
+```text
+uniform, frequency_all, recent_frequency, ewma_recency,
+bayesian_dirichlet, gap_overdue, pair_centrality,
+anti_frequency, anti_recent, drift_recent_vs_old, stability,
+hybrid_gap_pair, hybrid_recency_pair, ensemble, legacy_weighted
+```
 
 See [docs/methodology.md](docs/methodology.md) for the plain-language math notes.
 

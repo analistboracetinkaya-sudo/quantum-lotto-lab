@@ -2,15 +2,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 from datetime import date
 from pathlib import Path
 
 from .data import load_custom_spec, load_draws
 from .ibm import run_heavy_sampling, save_ibm_account
 from .lotteries import get_lottery, list_lotteries
-from .math_model import backtest_summary, hit_distribution, make_tickets, number_scores
-from .randomness import audit_pool_randomness, walk_forward_models
+from .math_model import backtest_summary, hit_distribution, number_scores, optimize_tickets, ticket_set_metrics
+from .randomness import audit_pool_randomness, randomness_fingerprint, score_vector, walk_forward_models
 
 
 def prompt(value: str | None, label: str) -> str:
@@ -60,8 +59,9 @@ def cmd_predict(args: argparse.Namespace) -> None:
             output_counts=output_counts,
         )
 
-    tickets = make_tickets(spec, draws, columns=args.columns, seed_bits=seed_bits, seed=args.seed)
+    tickets = optimize_tickets(spec, draws, columns=args.columns, seed_bits=seed_bits, seed=args.seed)
     history = backtest_summary(tickets, draws[-min(len(draws), args.backtest_draws) :])
+    set_metrics = ticket_set_metrics(tickets, spec.main)
     baseline = hit_distribution(spec.main.maximum - spec.main.minimum + 1, spec.main.pick, args.columns)
     jackpot_note = f"1 / {baseline['jackpot_one_in']:,}".replace(",", ".")
 
@@ -72,6 +72,7 @@ def cmd_predict(args: argparse.Namespace) -> None:
         "draw_date": target_date,
         "columns": args.columns,
         "tickets": [ticket.as_dict() for ticket in tickets],
+        "ticket_set_metrics": set_metrics,
         "history": history,
         "theoretical": {
             "main_jackpot_approx": baseline["jackpot_approx"],
@@ -112,16 +113,17 @@ def cmd_audit(args: argparse.Namespace) -> None:
         raise SystemExit(f"Need at least 30 historical draws. Loaded {len(draws)}.")
 
     randomness = audit_pool_randomness(draws, spec.main, "main")
+    fingerprint = randomness_fingerprint(draws, spec.main, "main")
     walk = walk_forward_models(draws, spec, field="main", train_min=args.train_min)
     baseline = hit_distribution(spec.main.maximum - spec.main.minimum + 1, spec.main.pick, args.columns)
 
+    best_model_scores = score_vector(draws, spec, "main", walk["best_model"])
     seed_bits = None
     quantum_job = None
     if args.ibm:
-        best_model = walk["best_model"]
-        # Use the model verdict to choose the input weights. If the walk-forward
+        # Use the validated model as IBM input weights. If the walk-forward
         # signal is weak, this still produces an honest experiment, not a claim.
-        weights = number_scores(draws, spec.main, "main").tolist()
+        weights = best_model_scores.tolist()
         output_counts = Path(args.output).with_suffix(".counts.json") if args.output else None
         seed_bits, quantum_job = run_heavy_sampling(
             backend_name=args.backend,
@@ -133,8 +135,16 @@ def cmd_audit(args: argparse.Namespace) -> None:
             output_counts=output_counts,
         )
 
-    tickets = make_tickets(spec, draws, columns=args.columns, seed_bits=seed_bits, seed=args.seed)
+    tickets = optimize_tickets(
+        spec,
+        draws,
+        columns=args.columns,
+        seed_bits=seed_bits,
+        seed=args.seed,
+        score_override=best_model_scores,
+    )
     ticket_backtest = backtest_summary(tickets, draws[-min(len(draws), args.backtest_draws) :])
+    set_metrics = ticket_set_metrics(tickets, spec.main)
     payload = {
         "warning": "Research/entertainment only. Lottery outcomes are random; no guarantee is made.",
         "right_question": "Is there measurable non-random structure, and does it survive out-of-sample validation?",
@@ -143,8 +153,11 @@ def cmd_audit(args: argparse.Namespace) -> None:
         "draw_date": target_date,
         "columns": args.columns,
         "randomness_audit": randomness,
+        "randomness_fingerprint": fingerprint,
         "walk_forward": walk,
+        "selected_generation_model": walk["best_model"],
         "tickets": [ticket.as_dict() for ticket in tickets],
+        "ticket_set_metrics": set_metrics,
         "ticket_backtest": ticket_backtest,
         "theoretical": {
             "main_jackpot_approx": baseline["jackpot_approx"],
@@ -173,6 +186,7 @@ def cmd_audit(args: argparse.Namespace) -> None:
 
 def audit_report(payload: dict) -> str:
     audit = payload["randomness_audit"]
+    fingerprint = payload["randomness_fingerprint"]
     walk = payload["walk_forward"]
     best = walk["models"][walk["best_model"]]
     uniform = walk["models"]["uniform"]
@@ -185,6 +199,7 @@ def audit_report(payload: dict) -> str:
         "## Short Answer",
         "",
         f"- Measured structure strength: `{audit['verdict']['signal_strength']}`.",
+        f"- Randomness fingerprint: `{', '.join(fingerprint['randomness_type']['dominant_types'])}`.",
         f"- Randomness-test interpretation: {audit['verdict']['plain']}",
         f"- Out-of-sample verdict: {walk['verdict']['plain']}",
         f"- Best walk-forward model: `{walk['best_model']}`.",
@@ -193,7 +208,11 @@ def audit_report(payload: dict) -> str:
         "",
         f"- Draws loaded: `{payload['source']['draws_loaded']}` from `{payload['source']['first_draw']}` to `{payload['source']['last_draw']}`.",
         f"- Frequency max |z|: `{audit['frequency']['max_abs_z']:.2f}`.",
+        f"- Normalized entropy: `{fingerprint['entropy']['normalized_entropy']:.4f}`.",
         f"- Top pair lift: `{audit['pair_lift']['max_lift']:.2f}`.",
+        f"- Top triple lift: `{fingerprint['triple_lift']['max_lift']:.2f}`.",
+        f"- Serial lag max delta: `{fingerprint['serial_dependence']['max_abs_lift_delta']:.2f}`.",
+        f"- Distribution drift JS: `{fingerprint['drift']['js_divergence']:.4f}`.",
         f"- Best model mean hits: `{best['mean_hits']:.3f}` vs uniform `{uniform['mean_hits']:.3f}`.",
         f"- Best model 2+ rate: `{best['any_2_plus'] * 100:.2f}%` vs uniform `{uniform['any_2_plus'] * 100:.2f}%`.",
         f"- Best model 3+ rate: `{best['any_3_plus'] * 100:.2f}%` vs uniform `{uniform['any_3_plus'] * 100:.2f}%`.",
@@ -202,6 +221,7 @@ def audit_report(payload: dict) -> str:
         "",
         "If a signal appears in the randomness audit but fails walk-forward validation, it is probably just historical noise.",
         "If it also improves out-of-sample metrics, the system may use it as a weak weighting signal. It is still not a guarantee.",
+        f"Plain fingerprint summary: {fingerprint['plain_language']['summary']}",
         "",
         "## Generated Tickets",
         "",
@@ -214,6 +234,10 @@ def audit_report(payload: dict) -> str:
             "",
             "## Ticket Set Backtest",
             "",
+            f"- Union coverage: `{payload['ticket_set_metrics']['union_size']}/{payload['ticket_set_metrics']['pool_size']}`.",
+            f"- Max pairwise overlap: `{payload['ticket_set_metrics']['max_pairwise_overlap']}`.",
+            f"- Max number reuse: `{payload['ticket_set_metrics']['max_number_reuse']}`.",
+            f"- Pair/triple coverage count: `{payload['ticket_set_metrics']['pair_coverage_count']}` / `{payload['ticket_set_metrics']['triple_coverage_count']}`.",
             f"- Best-main average: `{payload['ticket_backtest']['best_main_mean']:.2f}`.",
             f"- 2+ rate: `{payload['ticket_backtest']['any_2_plus'] * 100:.2f}%`.",
             f"- 3+ rate: `{payload['ticket_backtest']['any_3_plus'] * 100:.2f}%`.",
@@ -258,12 +282,20 @@ def human_report(payload: dict) -> str:
         f"- Random baseline for at least one 3+ main hit: `{payload['theoretical']['random_any_3_plus'] * 100:.2f}%`.",
     ]
     history = payload.get("history") or {}
+    set_metrics = payload.get("ticket_set_metrics") or {}
     if history:
         rows.extend(
             [
                 f"- Historical best-main average on the backtest window: `{history['best_main_mean']:.2f}`.",
                 f"- Historical 2+ rate on the generated set: `{history['any_2_plus'] * 100:.2f}%`.",
                 f"- Historical 3+ rate on the generated set: `{history['any_3_plus'] * 100:.2f}%`.",
+            ]
+        )
+    if set_metrics:
+        rows.extend(
+            [
+                f"- Union coverage: `{set_metrics['union_size']}/{set_metrics['pool_size']}`.",
+                f"- Max pairwise overlap: `{set_metrics['max_pairwise_overlap']}`.",
             ]
         )
     if payload.get("ibm_quantum"):
