@@ -1,30 +1,47 @@
 # KuponIQ Quantum App
 
-Flutter prototype for the Quantum Lotto Lab workflow.
+Flutter mobile/web app for the Quantum Lotto Lab workflow.
 
 ## Current Prototype Screens
 
-1. Welcome
-2. Login and IBM token entry
-3. Turkish lottery picker
-4. Data sync status
-5. Randomness audit
-6. IBM Quantum job status
-7. Coupon builder
-8. Coupon portfolio
-9. Backtest summary
-10. Profile and settings
+1. Ana
+2. Loto
+3. Analiz
+4. Kupon
+5. Ayarlar
 
 ## Token Handling
 
-The app does not hard-code IBM credentials. The prototype shows the UX for entering a token. A production build should store the token with platform secure storage or call a backend that owns the IBM runtime session.
+The app does not hard-code IBM credentials. The only account-related UI is the
+IBM Quantum token section under Ayarlar. IBM execution is handled by the local
+Python gateway, which saves and reads the user's local Qiskit account. The
+token is never stored in this repository.
 
-## Run
+## Run With Demo Data
 
 ```bash
 cd app
 flutter run
 ```
+
+## Run With Local Quantum Gateway
+
+From the repository root:
+
+```bash
+python -m pip install -e ".[server]"
+uvicorn server.kuponiq_gateway.app:app --host 127.0.0.1 --port 8787
+```
+
+Then run the app:
+
+```bash
+cd app
+flutter run -d chrome --web-port 8788
+```
+
+The app calls `http://127.0.0.1:8787` and falls back to demo mode if the
+gateway is not running.
 
 ## Validate
 

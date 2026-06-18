@@ -20,6 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
+server = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
 
 [project.scripts]
 quantum-lotto-lab = "quantum_lotto_lab.cli:main"
@@ -27,4 +28,3 @@ quantum-lotto-lab = "quantum_lotto_lab.cli:main"
 [tool.ruff]
 line-length = 120
 target-version = "py310"
-

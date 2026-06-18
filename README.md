@@ -109,6 +109,11 @@ Each user saves their own IBM Quantum token locally:
 quantum-lotto-lab ibm-login
 ```
 
+The Flutter app can also save a token through the local gateway. Start the
+gateway, open Ayarlar, paste the IBM Quantum token, and use the local save
+action. The token is written to the user's Qiskit account storage, not to this
+repository.
+
 Then run:
 
 ```bash
@@ -216,13 +221,30 @@ Current generated files include:
 - `data/tr/on_numara_tr_10y_undated.csv`
 - `data/tr/turkey_lottery_manifest.json`
 
-The Flutter prototype is under `app/` and is branded as **KuponIQ Quantum**.
-It shows the intended user flow: membership, IBM token entry, lottery selection,
-data sync, randomness audit, IBM job status, coupon portfolio, backtest, and
-profile/settings.
+The Flutter app is under `app/` and is branded as **KuponIQ Quantum**.
+It contains a 5-tab mobile workflow: Ana, Loto, Analiz, Kupon, and Ayarlar.
+Only IBM Quantum token setup lives under Ayarlar; there is no public prototype
+user profile or membership screen.
 
-The prototype does not commit user credentials. Production token storage should
-use platform secure storage or a backend-controlled IBM runtime session.
+## Mobile Screenshots
+
+![KuponIQ Quantum home](docs/assets/screenshots/kuponiq-home.png)
+
+![KuponIQ Quantum settings](docs/assets/screenshots/kuponiq-settings.png)
+The Ayarlar tab only handles IBM Quantum token/gateway status; there is no
+profile or membership flow in the public prototype.
+
+The local gateway is under `server/kuponiq_gateway/`:
+
+```bash
+python -m pip install -e ".[server]"
+uvicorn server.kuponiq_gateway.app:app --host 127.0.0.1 --port 8787
+```
+
+The app never commits user credentials. IBM execution is controlled by the
+Python gateway, which reads or writes the user's local Qiskit account on that
+machine. Production token storage should use platform secure storage or a
+backend-controlled IBM runtime session.
 
 ## Development
 

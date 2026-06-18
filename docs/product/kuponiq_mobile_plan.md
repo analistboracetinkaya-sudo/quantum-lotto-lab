@@ -17,7 +17,7 @@ The app never presents recommendations as guaranteed winning numbers.
 ## Screen Flow
 
 1. **Splash / Welcome** - App identity and short animated lottery-ball orbit.
-2. **Login / IBM Connect** - Email entry and IBM token entry; tokens are not stored in the repository.
+2. **Ayarlar / IBM Connect** - IBM token entry only; tokens are not stored in the repository.
 3. **Lottery Picker** - Çılgın Sayısal Loto, Süper Loto, Şans Topu, On Numara, Hızlı On, Milli Piyango.
 4. **Data Sync** - Last 10-year archive status, source badges, quality warnings.
 5. **Randomness Audit** - Fingerprint chart for frequency, gap, pair, triple, calendar, drift, runs.
@@ -25,7 +25,7 @@ The app never presents recommendations as guaranteed winning numbers.
 7. **Coupon Builder** - Column count, risk balance, coverage constraints, overlap control.
 8. **Coupon Portfolio** - Generated coupons, union coverage, reuse and overlap metrics.
 9. **Backtest / Result** - 2+ and 3+ backtest rates versus random baseline.
-10. **Profile / Settings** - Subscription, IBM token, responsible-play controls, cache/export.
+10. **Ayarlar** - IBM token and gateway status only.
 
 ## Build Scope
 
