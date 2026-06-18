@@ -43,4 +43,3 @@ class Ticket:
 
     def as_dict(self) -> dict:
         return {"main": list(self.main), "bonus": list(self.bonus), "source": self.source}
-

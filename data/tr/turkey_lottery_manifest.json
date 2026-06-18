@@ -1,0 +1,160 @@
+{
+  "generated_at": "2026-06-18",
+  "window_years": 10,
+  "games": {
+    "cilgin-sayisal-loto-tr": {
+      "slug": "cilgin-sayisal-loto-tr",
+      "name": "Çılgın Sayısal Loto",
+      "draw_kind": "6/90 + Joker + SüperStar",
+      "source_url": "https://www.lotobil.com/Sayisal-Loto-Butun-Sonuc-Listesi",
+      "main_min": 1,
+      "main_max": 90,
+      "drawn_main_count": 6,
+      "ticket_main_count": 6,
+      "bonus_min": 1,
+      "bonus_max": 90,
+      "drawn_bonus_count": 2,
+      "ticket_bonus_count": 2,
+      "schedule_note": "Haftada 3 çekiliş: Pazartesi, Çarşamba, Cumartesi.",
+      "model_status": "ready",
+      "data_status": "public_archive",
+      "note": "Last 10 years include old and new Sayısal Loto eras; reports flag regime changes.",
+      "csv": "cilgin_sayisal_loto_tr_10y.csv",
+      "excluded_csv": "cilgin_sayisal_loto_tr_10y_excluded.csv",
+      "quality": {
+        "rows": 1236,
+        "first": "2016-06-18 00:00:00",
+        "last": "2026-06-17 00:00:00",
+        "issues": []
+      }
+    },
+    "super-loto-tr": {
+      "slug": "super-loto-tr",
+      "name": "Süper Loto",
+      "draw_kind": "6/60",
+      "source_url": "https://www.lotobil.com/Super-Loto-Butun-Sonuc-Listesi",
+      "main_min": 1,
+      "main_max": 60,
+      "drawn_main_count": 6,
+      "ticket_main_count": 6,
+      "bonus_min": null,
+      "bonus_max": null,
+      "drawn_bonus_count": null,
+      "ticket_bonus_count": null,
+      "schedule_note": "Haftada 3 çekiliş: Salı, Perşembe, Pazar.",
+      "model_status": "ready",
+      "data_status": "public_archive",
+      "note": "",
+      "csv": "super_loto_tr_10y.csv",
+      "excluded_csv": "super_loto_tr_10y_excluded.csv",
+      "quality": {
+        "rows": 1135,
+        "first": "2016-06-23 00:00:00",
+        "last": "2026-06-16 00:00:00",
+        "issues": []
+      }
+    },
+    "sans-topu-tr": {
+      "slug": "sans-topu-tr",
+      "name": "Şans Topu",
+      "draw_kind": "5/34 + 1/14",
+      "source_url": "https://www.lotobil.com/Sans-Topu-Butun-Sonuc-Listesi",
+      "main_min": 1,
+      "main_max": 34,
+      "drawn_main_count": 5,
+      "ticket_main_count": 5,
+      "bonus_min": 1,
+      "bonus_max": 14,
+      "drawn_bonus_count": 1,
+      "ticket_bonus_count": 1,
+      "schedule_note": "Haftada 2 çekiliş: Çarşamba, Pazar.",
+      "model_status": "ready",
+      "data_status": "public_archive",
+      "note": "",
+      "csv": "sans_topu_tr_10y.csv",
+      "excluded_csv": "sans_topu_tr_10y_excluded.csv",
+      "quality": {
+        "rows": 816,
+        "first": "2016-06-22 00:00:00",
+        "last": "2026-06-17 00:00:00",
+        "issues": []
+      }
+    },
+    "on-numara-tr": {
+      "slug": "on-numara-tr",
+      "name": "On Numara",
+      "draw_kind": "22/80 draw, 10/80 coupon",
+      "source_url": "https://www.lotobil.com/On-Numara-Butun-Sonuc-Listesi",
+      "main_min": 1,
+      "main_max": 80,
+      "drawn_main_count": 22,
+      "ticket_main_count": 10,
+      "bonus_min": null,
+      "bonus_max": null,
+      "drawn_bonus_count": null,
+      "ticket_bonus_count": null,
+      "schedule_note": "Haftada 2 çekiliş: Pazartesi, Cuma.",
+      "model_status": "audit_ready_coupon_adapter",
+      "data_status": "public_archive_missing_dates",
+      "note": "LotoBil archive exposes year/draw number/22 numbers without draw dates; time-series features need official dated rows.",
+      "csv": "on_numara_tr_10y_undated.csv",
+      "excluded_csv": "on_numara_tr_10y_undated_excluded.csv",
+      "quality": {
+        "rows": 779,
+        "first": null,
+        "last": null,
+        "issues": []
+      }
+    },
+    "hizli-on-numara-tr": {
+      "slug": "hizli-on-numara-tr",
+      "name": "Hızlı On",
+      "draw_kind": "20/80 draw, 1-10/80 coupon",
+      "source_url": "https://www.millipiyangoonline.com/hizli-on-numara/cekilis-sonuclari",
+      "main_min": 1,
+      "main_max": 80,
+      "drawn_main_count": 20,
+      "ticket_main_count": 10,
+      "bonus_min": null,
+      "bonus_max": null,
+      "drawn_bonus_count": null,
+      "ticket_bonus_count": null,
+      "schedule_note": "5 dakikada bir çekiliş.",
+      "model_status": "adapter_ready_limited_archive",
+      "data_status": "no_10y_archive_new_game",
+      "note": "New fast-draw product; no 10-year public archive exists. App supports connector ingestion when dated API data is available.",
+      "csv": null,
+      "quality": {
+        "rows": 0,
+        "issues": [
+          "no_10y_archive_new_game"
+        ]
+      }
+    },
+    "milli-piyango-tr": {
+      "slug": "milli-piyango-tr",
+      "name": "Milli Piyango",
+      "draw_kind": "ticket serial draw",
+      "source_url": "https://www.millipiyangoonline.com/cekilis-sonuclari",
+      "main_min": null,
+      "main_max": null,
+      "drawn_main_count": null,
+      "ticket_main_count": null,
+      "bonus_min": null,
+      "bonus_max": null,
+      "drawn_bonus_count": null,
+      "ticket_bonus_count": null,
+      "schedule_note": "",
+      "model_status": "not_lotto_pool",
+      "data_status": "separate_ticket_serial_model",
+      "note": "Not a number-pool lotto coupon; keep separate from pool-based quantum ticket optimization.",
+      "csv": null,
+      "quality": {
+        "rows": 0,
+        "issues": [
+          "separate_ticket_serial_model"
+        ]
+      }
+    }
+  }
+}

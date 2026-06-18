@@ -154,8 +154,7 @@ def load_draws(spec: LotterySpec, csv_path: str | Path | None = None) -> list[Dr
         return parse_generic_csv(csv_path, spec)
     if not spec.source_url or not spec.parser:
         raise SystemExit(
-            f"{spec.name} has no built-in live source. Pass --csv with draw history, "
-            "or add a custom lottery JSON spec."
+            f"{spec.name} has no built-in live source. Pass --csv with draw history, or add a custom lottery JSON spec."
         )
     parser = PARSERS.get(spec.parser)
     if parser is None:

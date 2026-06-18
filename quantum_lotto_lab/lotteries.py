@@ -53,6 +53,41 @@ BUILTINS: dict[str, LotterySpec] = {
         parser="lotobil_super_loto",
         source_note="HTML source can change; --csv is recommended for reproducible research.",
     ),
+    "cilgin-sayisal-loto-tr": LotterySpec(
+        slug="cilgin-sayisal-loto-tr",
+        name="Turkey Çılgın Sayısal Loto",
+        region="Turkey",
+        main=PoolSpec("numbers", 1, 90, 6),
+        bonus=PoolSpec("joker/superstar", 1, 90, 2),
+        source_url=None,
+        parser=None,
+        source_note=(
+            "Use scripts/fetch_tr_lottery_data.py for dated LotoBil archive CSV. "
+            "The last 10 years cross old and new Sayısal Loto rule eras."
+        ),
+    ),
+    "sans-topu-tr": LotterySpec(
+        slug="sans-topu-tr",
+        name="Turkey Şans Topu",
+        region="Turkey",
+        main=PoolSpec("numbers", 1, 34, 5),
+        bonus=PoolSpec("plus ball", 1, 14, 1),
+        source_url=None,
+        parser=None,
+        source_note="Use scripts/fetch_tr_lottery_data.py for dated LotoBil archive CSV.",
+    ),
+    "on-numara-tr-draw": LotterySpec(
+        slug="on-numara-tr-draw",
+        name="Turkey On Numara Draw Field",
+        region="Turkey",
+        main=PoolSpec("drawn numbers", 1, 80, 22),
+        source_url=None,
+        parser=None,
+        source_note=(
+            "Draw-audit spec only. On Numara coupons pick 10 numbers, while draws expose 22 winning numbers. "
+            "Use the mobile adapter/metadata for coupon generation."
+        ),
+    ),
     "uk-lotto": LotterySpec(
         slug="uk-lotto",
         name="UK Lotto",
@@ -105,4 +140,3 @@ def get_lottery(slug: str) -> LotterySpec:
     except KeyError as exc:
         choices = ", ".join(sorted(BUILTINS))
         raise SystemExit(f"Unknown lottery '{slug}'. Available: {choices}") from exc
-

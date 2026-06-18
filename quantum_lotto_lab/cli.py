@@ -190,7 +190,9 @@ def cmd_audit(args: argparse.Namespace) -> None:
         "lottery_slug": spec.slug,
         "draw_date": target_date,
         "target": args.target,
-        "target_plain": "single highest-ranked 6/6 column" if args.target == "single6" else f"{columns}-column diversified 6/6 portfolio",
+        "target_plain": "single highest-ranked 6/6 column"
+        if args.target == "single6"
+        else f"{columns}-column diversified 6/6 portfolio",
         "columns": columns,
         "randomness_audit": randomness,
         "randomness_fingerprint": fingerprint,
@@ -439,7 +441,9 @@ def build_parser() -> argparse.ArgumentParser:
     login_parser.add_argument("--channel", default="ibm_quantum_platform")
     login_parser.set_defaults(func=cmd_ibm_login)
 
-    audit = sub.add_parser("audit", help="Test randomness structure, run walk-forward validation, then generate tickets.")
+    audit = sub.add_parser(
+        "audit", help="Test randomness structure, run walk-forward validation, then generate tickets."
+    )
     audit.add_argument("--lottery", help="Built-in lottery slug. Run `quantum-lotto-lab list`.")
     audit.add_argument("--spec", help="Custom lottery JSON spec.")
     audit.add_argument("--date", help="Draw date YYYY-MM-DD.")
@@ -450,7 +454,9 @@ def build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--backtest-draws", type=int, default=157)
     audit.add_argument("--nested-test-draws", type=int, default=52)
     audit.add_argument("--nested-candidate-pool", type=int, default=800)
-    audit.add_argument("--deep-calibration", action="store_true", help="Use more null simulations for randomness calibration.")
+    audit.add_argument(
+        "--deep-calibration", action="store_true", help="Use more null simulations for randomness calibration."
+    )
     audit.add_argument("--null-trials", type=int, default=None, help="Override null simulation count.")
     audit.add_argument("--candidate-mode", choices=["sampled", "exact"], default="sampled")
     audit.add_argument("--exact-top-k", type=int, default=10000)

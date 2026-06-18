@@ -196,7 +196,9 @@ def lag_overlap(draws: list[Draw], pool: PoolSpec, field: str, max_lag: int = 10
     for lag in range(1, min(max_lag, len(sets) - 1) + 1):
         overlaps = [len(sets[idx] & sets[idx - lag]) for idx in range(lag, len(sets))]
         mean = float(np.mean(overlaps)) if overlaps else 0.0
-        rows.append({"lag": lag, "mean_overlap": mean, "expected_overlap": expected, "lift": mean / max(expected, 1e-12)})
+        rows.append(
+            {"lag": lag, "mean_overlap": mean, "expected_overlap": expected, "lift": mean / max(expected, 1e-12)}
+        )
     max_lift = max((abs(row["lift"] - 1.0) for row in rows), default=0.0)
     return {"expected_overlap": expected, "max_abs_lift_delta": float(max_lift), "lags": rows}
 
@@ -213,7 +215,12 @@ def rolling_drift(draws: list[Draw], pool: PoolSpec, field: str) -> dict:
     diff = late_probs - early_probs
     movers = sorted(
         (
-            {"number": value, "delta_probability": float(diff[idx]), "early_p": float(early_probs[idx]), "late_p": float(late_probs[idx])}
+            {
+                "number": value,
+                "delta_probability": float(diff[idx]),
+                "early_p": float(early_probs[idx]),
+                "late_p": float(late_probs[idx]),
+            }
             for idx, value in enumerate(pool.values)
         ),
         key=lambda row: abs(row["delta_probability"]),
@@ -303,13 +310,17 @@ def randomness_fingerprint(draws: list[Draw], pool: PoolSpec, field: str = "main
         ),
         "graph_concentration": min(1.0, gini(pair_counts) if len(pair_counts) else 0.0),
     }
-    dominant = [name for name, value in sorted(scores.items(), key=lambda item: item[1], reverse=True) if value >= 0.35][:5]
+    dominant = [
+        name for name, value in sorted(scores.items(), key=lambda item: item[1], reverse=True) if value >= 0.35
+    ][:5]
     if not dominant:
         dominant = ["near_uniform"]
     summary = (
         "The draw history looks closest to uniform randomness under this battery."
         if dominant == ["near_uniform"]
-        else "Dominant randomness fingerprints: " + ", ".join(dominant) + ". These are hypotheses and must survive walk-forward tests."
+        else "Dominant randomness fingerprints: "
+        + ", ".join(dominant)
+        + ". These are hypotheses and must survive walk-forward tests."
     )
     return {
         "draws": len(draws),
@@ -369,7 +380,12 @@ def score_vector(draws: list[Draw], spec: LotterySpec, field: str, model: str) -
     weights = np.exp(np.linspace(-3.0, 0.0, max(1, len(draws))))
     ewma = robust_z((mat * weights[:, None]).sum(axis=0) / max(float(weights.sum()), 1e-12))
     alpha = 0.7
-    bayes = robust_z(np.log((np.array([mat_counts[value] for value in values], dtype=float) + alpha) / (len(draws) * pool.pick + alpha * len(values))))
+    bayes = robust_z(
+        np.log(
+            (np.array([mat_counts[value] for value in values], dtype=float) + alpha)
+            / (len(draws) * pool.pick + alpha * len(values))
+        )
+    )
     drift = robust_z(recent_frequency - old_frequency)
     block_count = min(6, max(2, len(draws) // 20))
     blocks = np.array_split(mat, block_count)
@@ -400,7 +416,9 @@ def score_vector(draws: list[Draw], spec: LotterySpec, field: str, model: str) -
     if model == "hybrid_recency_pair":
         return robust_z(0.55 * recent_frequency + 0.45 * pair)
     if model == "ensemble":
-        return robust_z(0.20 * frequency + 0.20 * recent_frequency + 0.15 * ewma + 0.15 * gap + 0.18 * pair + 0.12 * drift)
+        return robust_z(
+            0.20 * frequency + 0.20 * recent_frequency + 0.15 * ewma + 0.15 * gap + 0.18 * pair + 0.12 * drift
+        )
     if model == "legacy_weighted":
         return number_scores(draws, pool, field)
     raise ValueError(f"unknown model {model}")

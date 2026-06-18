@@ -48,6 +48,9 @@ Current built-ins:
 - `euromillions` - EuroMillions, `5/50 + 2/12`
 - `eurojackpot` - EuroJackpot, `5/50 + 2/12`
 - `super-loto-tr` - Turkey Super Loto, `6/60`
+- `cilgin-sayisal-loto-tr` - Turkey Çılgın Sayısal Loto, `6/90 + 2/90`
+- `sans-topu-tr` - Turkey Şans Topu, `5/34 + 1/14`
+- `on-numara-tr-draw` - Turkey On Numara draw audit field, `22/80`
 - `uk-lotto` - UK Lotto, `6/59 + bonus`
 - `france-loto` - France Loto, `5/49 + 1/10`
 - `germany-6aus49` - Germany Lotto 6aus49, `6/49 + superzahl`
@@ -195,6 +198,31 @@ See [docs/methodology.md](docs/methodology.md) for the plain-language math notes
 - Do not put tokens in `.env` files inside public repositories.
 - This tool uses Qiskit's local account storage through `quantum-lotto-lab ibm-login`.
 - Generated output files and counts are ignored by `.gitignore`.
+
+## Turkey Data And Mobile Prototype
+
+Turkey-specific product metadata lives in `quantum_lotto_lab/tr_lotteries.py`.
+Use the fetcher to build reproducible local CSVs and a data-quality manifest:
+
+```bash
+PYTHONPATH=. python scripts/fetch_tr_lottery_data.py --output-dir data/tr --years 10
+```
+
+Current generated files include:
+
+- `data/tr/cilgin_sayisal_loto_tr_10y.csv`
+- `data/tr/super_loto_tr_10y.csv`
+- `data/tr/sans_topu_tr_10y.csv`
+- `data/tr/on_numara_tr_10y_undated.csv`
+- `data/tr/turkey_lottery_manifest.json`
+
+The Flutter prototype is under `app/` and is branded as **KuponIQ Quantum**.
+It shows the intended user flow: membership, IBM token entry, lottery selection,
+data sync, randomness audit, IBM job status, coupon portfolio, backtest, and
+profile/settings.
+
+The prototype does not commit user credentials. Production token storage should
+use platform secure storage or a backend-controlled IBM runtime session.
 
 ## Development
 

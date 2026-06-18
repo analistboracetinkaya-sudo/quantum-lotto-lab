@@ -19,4 +19,3 @@ def test_hit_distribution():
     dist = hit_distribution(60, 6, 30)
     assert 0 < dist["jackpot_approx"] < 1
     assert dist["any_2_plus"] > dist["any_3_plus"]
-

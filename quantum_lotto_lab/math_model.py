@@ -30,19 +30,19 @@ def draw_matrix(draws: list[Draw], pool: PoolSpec, field: str) -> np.ndarray:
 
 
 def pair_centrality(draws: list[Draw], pool: PoolSpec, field: str) -> np.ndarray:
-    counts = Counter()
     totals = Counter()
+    related = Counter()
     for draw in draws:
         nums = draw.main if field == "main" else draw.bonus
         nums = tuple(num for num in nums if pool.minimum <= num <= pool.maximum)
         for num in nums:
             totals[num] += 1
-        for pair in itertools.combinations(sorted(nums), 2):
-            counts[pair] += 1
+        for a, b in itertools.combinations(sorted(nums), 2):
+            related[a] += 1
+            related[b] += 1
     score = []
     for value in pool.values:
-        related = sum(count for pair, count in counts.items() if value in pair)
-        score.append(related + 0.3 * totals[value])
+        score.append(related[value] + 0.3 * totals[value])
     return robust_z(np.array(score, dtype=float))
 
 
@@ -158,9 +158,9 @@ def candidate_objective(combo: tuple[int, ...], scores: np.ndarray, values: list
     target_span = (values[-1] - values[0]) * 0.72
     structure = (
         -0.18 * (odd - target_odd) ** 2
-        -0.16 * (low - target_low) ** 2
-        -0.06 * ((span - target_span) / max(1.0, target_span)) ** 2
-        -0.12 * max(0, consecutive - 1) ** 2
+        - 0.16 * (low - target_low) ** 2
+        - 0.06 * ((span - target_span) / max(1.0, target_span)) ** 2
+        - 0.12 * max(0, consecutive - 1) ** 2
     )
     if len(hits) == 0:
         return base + structure
@@ -182,7 +182,12 @@ def generate_candidate_combos(
 
     # Coverage skeleton: force the optimizer to consider all pool regions.
     for offset in range(max(1, len(values) // spec.main.pick)):
-        combo = tuple(sorted(ranked[(offset + step * max(1, len(values) // spec.main.pick)) % len(values)] for step in range(spec.main.pick)))
+        combo = tuple(
+            sorted(
+                ranked[(offset + step * max(1, len(values) // spec.main.pick)) % len(values)]
+                for step in range(spec.main.pick)
+            )
+        )
         candidates.add(combo)
 
     attempts = 0
@@ -193,7 +198,9 @@ def generate_candidate_combos(
     return sorted(candidates)
 
 
-def repair_union_coverage(selected: list[tuple[int, ...]], values: list[int], scores: np.ndarray, pick: int) -> list[tuple[int, ...]]:
+def repair_union_coverage(
+    selected: list[tuple[int, ...]], values: list[int], scores: np.ndarray, pick: int
+) -> list[tuple[int, ...]]:
     if len(selected) * pick < len(values):
         return selected
 
